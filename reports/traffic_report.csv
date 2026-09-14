@@ -1,4 +1,5 @@
-Protocol,Count
-TCP,9789
-UDP,13120
-Other,28
+Protocol,Count,Percentage
+TCP,9789,42.68
+UDP,13120,57.2
+ARP,14,0.06
+Other IP,14,0.06

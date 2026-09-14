@@ -1,2 +1,6 @@
-IP Address,Packets
-192.168.43.152,101
+IP Address,Type,Packets,Threshold,Severity,Address Class,Detail
+2402:3a80:4661:3657:d814:2a9e:bba9:195a,Traffic Flood (Source),7587,4233.9,MEDIUM,Public,7587 packets sent (threshold 4233.9)
+2404:6800:4009:820::200e,Traffic Flood (Source),5719,4233.9,MEDIUM,Public,5719 packets sent (threshold 4233.9)
+2402:3a80:4661:3657:d814:2a9e:bba9:195a,Traffic Flood (Destination),15130,6163.9,HIGH,Public,15130 packets received (threshold 6163.9)
+192.168.43.1,Possible Port Scan,94,25.0,HIGH,Private,58 distinct dest ports (53 probe-style) across 1 dest IP(s)
+2402:3a80:4661:3657::e0,Possible Port Scan,61,25.0,HIGH,Public,58 distinct dest ports (58 probe-style) across 1 dest IP(s)
