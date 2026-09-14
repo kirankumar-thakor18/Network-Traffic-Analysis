@@ -235,6 +235,10 @@ ALERT [HIGH] Possible Port Scan : 192.168.43.1 (Private) -> 94 packets
 Analysis completed successfully.
 ```
 
+### Live Screenshot
+
+![Network Traffic Analyzer - Terminal Output](screenshots/terminal_output.png)
+
 ---
 
 ## 🧠 How It Works
