@@ -13,6 +13,7 @@
 - [Project Structure](#project-structure)
 - [Prerequisites & Installation](#prerequisites--installation)
 - [How to Run](#how-to-run)
+- [Step-by-Step Guide](#step-by-step-guide-from-zero-to-results)
 - [Sample Terminal Output](#sample-terminal-output)
 - [How It Works](#how-it-works)
 - [Anomaly Detection Logic](#anomaly-detection-logic)
@@ -165,6 +166,36 @@ python scripts/analyzer.py --scan-ports 15 --std-mult 2.5 --min-packets 100
 | `--scan-ports`  | `25`                       | Distinct ports to flag as a possible port scan   |
 | `--std-mult`    | `3.0`                      | Std-dev multiplier for the flood threshold       |
 | `--min-packets` | `50`                       | Minimum packets before flood detection applies   |
+
+---
+
+## 📋 Step-by-Step Guide (from zero to results)
+
+1. **Install Python** — download Python 3.8+ from [python.org](https://www.python.org/downloads/). Tick *"Add Python to PATH"* while installing.
+2. **Open a terminal** in the project folder:
+   ```bash
+   cd Network-Traffic-Analysis
+   ```
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Get a capture file** (choose either):
+   - Use the included sample: `captures/traffic.pcapng` — no extra step needed, *or*
+   - Make your own with Wireshark: start capture → browse the internet for a minute → stop and *Save As* `.pcapng` into the `captures/` folder.
+5. **Run the analyzer:**
+   ```bash
+   python scripts/analyzer.py
+   ```
+   *Use your own capture:* `python scripts/analyzer.py --capture captures/my_capture.pcapng`
+6. **Read the terminal output** — total packets, protocol statistics, top IPs/ports, time analysis, and any detected anomalies.
+7. **Check the generated reports** in the `reports/` folder — 5 CSV files + 2 charts.
+8. **(Optional) Customize detection:** adjust thresholds before running, e.g.
+   ```bash
+   python scripts/analyzer.py --scan-ports 15 --std-mult 2.5 --min-packets 100 --top 5
+   ```
+
+> After step 7, the analysis is complete — no further configuration is required for a first run.
 
 ---
 
