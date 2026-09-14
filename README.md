@@ -100,12 +100,9 @@ Network-Traffic-Analysis/
 │   └── top_ports_chart.png
 │
 ├── scripts/
-│   ├── analyzer.py                 # Main analysis & detection tool
-│   └── make_presentation.py        # Generates the PPTX deck
+│   └── analyzer.py                 # Main analysis & detection tool
 │
 ├── screenshots/                    # Place for demo screenshots
-│
-├── Network_Traffic_Analysis_Presentation.pptx
 │
 ├── README.md
 └── requirements.txt
