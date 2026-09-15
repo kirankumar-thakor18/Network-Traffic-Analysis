@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Network Traffic Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="1.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M9 12l2 2 4-4" stroke="#0a85ff" stroke-width="2"/>
+            </svg>
+            <span>Network Traffic Analyzer</span>
+        </div>
+        <div class="nav-actions">
+            <span class="badge">{{ results.capture_name }}</span>
+            <a href="/" class="btn btn-small btn-secondary">New Analysis</a>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <!-- Stats Cards -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ "{:,}".format(results.total_packets) }}</h3>
+                    <p>Total Packets</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon cyan">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ results.time_stats.duration }}s</h3>
+                    <p>Capture Duration</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ results.time_stats.pps }}</h3>
+                    <p>Packets/sec</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon {% if results.alerts %}red{% else %}green{% endif %}">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ results.alerts|length }}</h3>
+                    <p>Threats Detected</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+            {% if results.charts.protocol %}
+            <div class="chart-card">
+                <h3>Protocol Distribution</h3>
+                <img src="data:image/png;base64,{{ results.charts.protocol }}" alt="Protocol Distribution">
+            </div>
+            {% endif %}
+            {% if results.charts.ports %}
+            <div class="chart-card wide">
+                <h3>Top Destination Ports</h3>
+                <img src="data:image/png;base64,{{ results.charts.ports }}" alt="Top Ports">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Protocol Table -->
+        <div class="table-card">
+            <h3>Protocol Statistics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Protocol</th>
+                        <th>Packets</th>
+                        <th>Percentage</th>
+                        <th>Bar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proto in results.protocols %}
+                    <tr>
+                        <td><span class="proto-badge {{ proto.name|lower }}">{{ proto.name }}</span></td>
+                        <td>{{ "{:,}".format(proto.count) }}</td>
+                        <td>{{ proto.percentage }}%</td>
+                        <td>
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: {{ proto.percentage }}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- IP Tables Row -->
+        <div class="tables-row">
+            <div class="table-card">
+                <h3>Top Source IPs</h3>
+                <table>
+                    <thead>
+                        <tr><th>IP Address</th><th>Packets</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in results.src_ips %}
+                        <tr>
+                            <td class="mono">{{ entry.ip }}</td>
+                            <td>{{ "{:,}".format(entry.packets) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-card">
+                <h3>Top Destination IPs</h3>
+                <table>
+                    <thead>
+                        <tr><th>IP Address</th><th>Packets</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in results.dst_ips %}
+                        <tr>
+                            <td class="mono">{{ entry.ip }}</td>
+                            <td>{{ "{:,}".format(entry.packets) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Destination Ports Table -->
+        <div class="table-card">
+            <h3>Top Destination Ports</h3>
+            <table>
+                <thead>
+                    <tr><th>Port</th><th>Packets</th><th>Usage</th></tr>
+                </thead>
+                <tbody>
+                    {% for entry in results.dst_ports %}
+                    <tr>
+                        <td><span class="port-badge">{{ entry.port }}</span></td>
+                        <td>{{ "{:,}".format(entry.packets) }}</td>
+                        <td>
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill ports" style="width: {{ (entry.packets / results.total_packets * 100)|round(1) }}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Alerts Section -->
+        {% if results.alerts %}
+        <div class="alerts-section">
+            <h3>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Threat Alerts ({{ results.alerts|length }} detected)
+            </h3>
+            <p class="alert-info">Flood threshold: {{ results.flood_threshold }} packets | Anomalies shown below</p>
+            <div class="alerts-grid">
+                {% for alert in results.alerts %}
+                <div class="alert-card {{ alert.Severity|lower }}">
+                    <div class="alert-header">
+                        <span class="severity-badge {{ alert.Severity|lower }}">{{ alert.Severity }}</span>
+                        <span class="alert-type">{{ alert.Type }}</span>
+                    </div>
+                    <div class="alert-body">
+                        <div class="alert-row">
+                            <span class="label">IP Address</span>
+                            <span class="value mono">{{ alert["IP Address"] }}</span>
+                        </div>
+                        <div class="alert-row">
+                            <span class="label">Packets</span>
+                            <span class="value">{{ alert.Packets }}</span>
+                        </div>
+                        <div class="alert-row">
+                            <span class="label">Address Class</span>
+                            <span class="value">{{ alert["Address Class"] }}</span>
+                        </div>
+                        <div class="alert-row">
+                            <span class="label">Detail</span>
+                            <span class="value small">{{ alert.Detail }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="no-alerts">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6bcb77" stroke-width="1.5">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <h3>No Threats Detected</h3>
+            <p>The network traffic appears clean. No anomalies found.</p>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="dashboard-footer">
+            <p>Network Traffic Analyzer & Threat Detection System | Kirankumar Thakor | Cyber Security Project</p>
+        </div>
+    </div>
+</body>
+</html>
