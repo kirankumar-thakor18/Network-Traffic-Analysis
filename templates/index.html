@@ -149,6 +149,18 @@
         });
 
         function handleFile(file) {
+            const MAX_SIZE = 40 * 1024 * 1024;
+            if (file.size > MAX_SIZE) {
+                analyzeBtn.disabled = true;
+                dropZone.classList.remove('has-file');
+                fileName.style.display = 'none';
+                dropZone.classList.add('error');
+                dropZone.querySelector('.drop-text').textContent =
+                    'File too large (' + (file.size / (1024 * 1024)).toFixed(1) + ' MB) - max 40 MB';
+                return;
+            }
+            dropZone.classList.remove('error');
+            dropZone.querySelector('.drop-text').textContent = 'Drag & drop your .pcap or .pcapng file here';
             fileName.textContent = file.name;
             fileName.style.display = 'block';
             dropZone.classList.add('has-file');

@@ -41,7 +41,8 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
 app.config["UPLOAD_FOLDER"] = Path(__file__).parent / "uploads"
-app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB max
+app.config["MAX_CONTENT_LENGTH"] = 40 * 1024 * 1024  # 40MB max
+MAX_UPLOAD_SIZE = 40 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = {"pcap", "pcapng"}
 
@@ -244,7 +245,9 @@ def internal_error(error):
 def file_too_large(error):
     return render_template(
         "index.html",
-        error="File is too large! Maximum upload size is 100 MB. Try a smaller capture.",
+        error="File is too large! Maximum upload size is 40 MB. "
+        "Real-time captures get large fast - capture for a shorter duration "
+        "or use Wireshark 'File > Export Specified Packets' to trim it.",
     ), 413
 
 
@@ -264,6 +267,17 @@ def analyze():
 
     if not allowed_file(file.filename):
         return render_template("index.html", error="Only .pcap and .pcapng files are allowed!")
+
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+    if file_size > MAX_UPLOAD_SIZE:
+        return render_template(
+            "index.html",
+            error=f"File is {(file_size / (1024 * 1024)):.1f} MB - over the {MAX_UPLOAD_SIZE // (1024 * 1024)} MB limit. "
+            "Real-time captures get large fast. Capture for a shorter duration or use Wireshark's "
+            "'File > Export Specified Packets' to trim it.",
+        ), 413
 
     filename = secure_filename(file.filename)
     unique_name = f"{uuid.uuid4().hex[:8]}_{filename}"
