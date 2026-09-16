@@ -3,73 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Network Traffic Analyzer</title>
+    <title>Analysis Results - Network Traffic Analyzer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="dashboard-body">
     <nav class="navbar">
         <div class="nav-brand">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="1.5">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <path d="M9 12l2 2 4-4" stroke="#0a85ff" stroke-width="2"/>
-            </svg>
-            <span>Network Traffic Analyzer</span>
+            <div class="nav-brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4" stroke="#00d2ff" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="nav-brand-text">
+                <span class="nav-title">Network Traffic Analyzer</span>
+                <span class="nav-subtitle">Threat Detection Suite</span>
+            </div>
         </div>
         <div class="nav-actions">
-            <span class="badge">{{ results.capture_name }}</span>
-            <a href="/download-pdf" class="btn btn-small btn-pdf">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <span class="badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                {{ results.capture_name }}
+            </span>
+            <a href="/download-pdf" class="btn btn-small btn-pdf" title="Export full report as PDF">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Download PDF
+                Export PDF
             </a>
-            <a href="/" class="btn btn-small btn-secondary">New Analysis</a>
+            <a href="/" class="btn btn-small btn-secondary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 9 12 2 21 9"/>
+                    <path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/>
+                </svg>
+                New Analysis
+            </a>
         </div>
     </nav>
 
-    <div class="dashboard">
-        <!-- Stats Cards -->
+    <div class="dash-wrapper">
+        <!-- Page Header -->
+        <header class="dash-header">
+            <div>
+                <h1>Analysis Report</h1>
+                <p class="dash-header-sub">
+                    Capture <span class="mono">{{ results.capture_name }}</span>
+                    {% if results.time_stats.duration %}
+                    &middot; analyzed in {{ results.time_stats.duration }}s window
+                    {% endif %}
+                </p>
+            </div>
+            <div class="health-chip {% if results.alerts %}danger{% else %}ok{% endif %}">
+                <span class="health-dot"></span>
+                {% if results.alerts %}
+                {{ results.alerts|length }} threat{{ 's' if results.alerts|length > 1 else '' }} detected
+                {% else %}
+                Traffic appears clean
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- KPI Cards -->
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-icon blue">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                     </svg>
                 </div>
                 <div class="stat-info">
                     <h3>{{ "{:,}".format(results.total_packets) }}</h3>
                     <p>Total Packets</p>
+                    <span class="stat-hint">All captured frames</span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon cyan">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                     </svg>
                 </div>
                 <div class="stat-info">
-                    <h3>{{ results.time_stats.duration }}s</h3>
+                    <h3>{{ results.time_stats.duration }}<span class="unit">s</span></h3>
                     <p>Capture Duration</p>
+                    <span class="stat-hint">Time window covered</span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon purple">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
                         <line x1="6" y1="20" x2="6" y2="14"/>
                     </svg>
                 </div>
                 <div class="stat-info">
-                    <h3>{{ results.time_stats.pps }}</h3>
-                    <p>Packets/sec</p>
+                    <h3>{{ results.time_stats.pps }}<span class="unit">/s</span></h3>
+                    <p>Data Rate</p>
+                    <span class="stat-hint">Packets per second</span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon {% if results.alerts %}red{% else %}green{% endif %}">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                         <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
@@ -77,169 +119,285 @@
                 <div class="stat-info">
                     <h3>{{ results.alerts|length }}</h3>
                     <p>Threats Detected</p>
+                    <span class="stat-hint">Anomalies flagged</span>
                 </div>
             </div>
         </div>
 
-        <!-- Charts Row -->
-        <div class="charts-row">
-            {% if results.charts.protocol %}
-            <div class="chart-card">
-                <h3>Protocol Distribution</h3>
-                <img src="data:image/png;base64,{{ results.charts.protocol }}" alt="Protocol Distribution">
+        <!-- Charts Section -->
+        <section class="panel-section" id="charts">
+            <div class="section-title">
+                <h2><span class="sec-num">01</span> Traffic Visualization</h2>
+                <span class="section-tag">Charts</span>
             </div>
-            {% endif %}
-            {% if results.charts.ports %}
-            <div class="chart-card wide">
-                <h3>Top Destination Ports</h3>
-                <img src="data:image/png;base64,{{ results.charts.ports }}" alt="Top Ports">
+            <div class="charts-row">
+                {% if results.charts.protocol %}
+                <div class="chart-card">
+                    <div class="card-head">
+                        <h3>
+                            <span class="head-icon cyan">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 12l5-5"/></svg>
+                            </span>
+                            Protocol Distribution
+                        </h3>
+                    </div>
+                    <div class="chart-body">
+                        <img src="data:image/png;base64,{{ results.charts.protocol }}" alt="Protocol Distribution">
+                    </div>
+                </div>
+                {% endif %}
+                {% if results.charts.ports %}
+                <div class="chart-card wide">
+                    <div class="card-head">
+                        <h3>
+                            <span class="head-icon purple">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                            </span>
+                            Top Destination Ports
+                        </h3>
+                    </div>
+                    <div class="chart-body">
+                        <img src="data:image/png;base64,{{ results.charts.ports }}" alt="Top Ports">
+                    </div>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
-        </div>
+        </section>
 
-        <!-- Protocol Table -->
-        <div class="table-card">
-            <h3>Protocol Statistics</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Protocol</th>
-                        <th>Packets</th>
-                        <th>Percentage</th>
-                        <th>Bar</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for proto in results.protocols %}
-                    <tr>
-                        <td><span class="proto-badge {{ proto.name|lower }}">{{ proto.name }}</span></td>
-                        <td>{{ "{:,}".format(proto.count) }}</td>
-                        <td>{{ proto.percentage }}%</td>
-                        <td>
-                            <div class="mini-bar">
-                                <div class="mini-bar-fill" style="width: {{ proto.percentage }}%"></div>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- IP Tables Row -->
-        <div class="tables-row">
+        <!-- Protocol Statistics -->
+        <section class="panel-section" id="protocols">
+            <div class="section-title">
+                <h2><span class="sec-num">02</span> Protocol Statistics</h2>
+                <span class="section-tag">{{ results.protocols|length }} protocols</span>
+            </div>
             <div class="table-card">
-                <h3>Top Source IPs</h3>
-                <table>
+                <table class="data-table">
                     <thead>
-                        <tr><th>IP Address</th><th>Packets</th></tr>
+                        <tr>
+                            <th>Protocol</th>
+                            <th>Packets</th>
+                            <th style="width: 40%;">Distribution</th>
+                            <th class="text-right">Percentage</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        {% for entry in results.src_ips %}
+                        {% for proto in results.protocols %}
                         <tr>
-                            <td class="mono">{{ entry.ip }}</td>
-                            <td>{{ "{:,}".format(entry.packets) }}</td>
+                            <td>
+                                <span class="proto-badge {{ proto.name|lower }}">{{ proto.name }}</span>
+                            </td>
+                            <td class="num">{{ "{:,}".format(proto.count) }}</td>
+                            <td>
+                                <div class="progress-track">
+                                    <div class="progress-bar {{ proto.name|lower }}" style="width: {{ proto.percentage }}%"></div>
+                                </div>
+                            </td>
+                            <td class="num text-right"><strong>{{ proto.percentage }}%</strong></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            <div class="table-card">
-                <h3>Top Destination IPs</h3>
-                <table>
-                    <thead>
-                        <tr><th>IP Address</th><th>Packets</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for entry in results.dst_ips %}
-                        <tr>
-                            <td class="mono">{{ entry.ip }}</td>
-                            <td>{{ "{:,}".format(entry.packets) }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        </section>
+
+        <!-- IPs & Ports -->
+        <section class="panel-section" id="hosts">
+            <div class="section-title">
+                <h2><span class="sec-num">03</span> Host Activity</h2>
+                <span class="section-tag">Top talkers &amp; targets</span>
             </div>
-        </div>
+            <div class="tables-row">
+                <div class="table-card">
+                    <div class="card-head">
+                        <h3><span class="head-icon blue">Src</span> Top Source IPs</h3>
+                        <div class="search-box">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" placeholder="Filter IPs..." class="table-search" data-target="src-table">
+                        </div>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="data-table compact" id="src-table" data-searchable>
+                            <thead>
+                                <tr><th>#</th><th>IP Address</th><th class="text-right">Packets</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in results.src_ips %}
+                                <tr>
+                                    <td class="rank">{{ loop.index }}</td>
+                                    <td><span class="mono clickable" onclick="copyIP(this)">{{ entry.ip }}</span></td>
+                                    <td class="num text-right">{{ "{:,}".format(entry.packets) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="table-card">
+                    <div class="card-head">
+                        <h3><span class="head-icon purple">Dst</span> Top Destination IPs</h3>
+                        <div class="search-box">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" placeholder="Filter IPs..." class="table-search" data-target="dst-table">
+                        </div>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="data-table compact" id="dst-table" data-searchable>
+                            <thead>
+                                <tr><th>#</th><th>IP Address</th><th class="text-right">Packets</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in results.dst_ips %}
+                                <tr>
+                                    <td class="rank">{{ loop.index }}</td>
+                                    <td><span class="mono clickable" onclick="copyIP(this)">{{ entry.ip }}</span></td>
+                                    <td class="num text-right">{{ "{:,}".format(entry.packets) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-        <!-- Destination Ports Table -->
-        <div class="table-card">
-            <h3>Top Destination Ports</h3>
-            <table>
-                <thead>
-                    <tr><th>Port</th><th>Packets</th><th>Usage</th></tr>
-                </thead>
-                <tbody>
-                    {% for entry in results.dst_ports %}
-                    <tr>
-                        <td><span class="port-badge">{{ entry.port }}</span></td>
-                        <td>{{ "{:,}".format(entry.packets) }}</td>
-                        <td>
-                            <div class="mini-bar">
-                                <div class="mini-bar-fill ports" style="width: {{ (entry.packets / results.total_packets * 100)|round(1) }}%"></div>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+            <div class="table-card">
+                <div class="card-head">
+                    <h3><span class="head-icon teal">Port</span> Top Destination Ports</h3>
+                    <span class="card-badge">Most contacted services</span>
+                </div>
+                <div class="table-scroll">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Port</th>
+                                <th>Packets</th>
+                                <th style="width: 40%;">Usage</th>
+                                <th class="text-right">Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in results.dst_ports %}
+                            {% set share = (entry.packets / results.total_packets * 100)|round(1) %}
+                            <tr>
+                                <td><span class="port-badge">{{ entry.port }}</span></td>
+                                <td class="num">{{ "{:,}".format(entry.packets) }}</td>
+                                <td>
+                                    <div class="progress-track">
+                                        <div class="progress-bar ports" style="width: {{ share }}%"></div>
+                                    </div>
+                                </td>
+                                <td class="num text-right">{{ share }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-        <!-- Alerts Section -->
-        {% if results.alerts %}
-        <div class="alerts-section">
-            <h3>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-                Threat Alerts ({{ results.alerts|length }} detected)
-            </h3>
-            <p class="alert-info">Flood threshold: {{ results.flood_threshold }} packets | Anomalies shown below</p>
+        <!-- Alerts -->
+        <section class="panel-section" id="alerts">
+            <div class="section-title">
+                <h2><span class="sec-num">04</span> Threat Alerts</h2>
+                <span class="section-tag {% if results.alerts %}risk{% else %}safe{% endif %}">
+                    {{ results.alerts|length }} detected
+                </span>
+            </div>
+
+            {% if results.alerts %}
+            <div class="alert-summary-bar">
+                <div class="alert-summary-item">
+                    <span class="alert-summary-label">Flood threshold</span>
+                    <span class="alert-summary-value mono">{{ results.flood_threshold }} pkts</span>
+                </div>
+                <div class="alert-summary-item">
+                    <span class="alert-summary-label">High severity</span>
+                    <span class="alert-summary-value high">{{ results.alerts|selectattr('Severity', 'equalto', 'HIGH')|list|length }}</span>
+                </div>
+                <div class="alert-summary-item">
+                    <span class="alert-summary-label">Medium severity</span>
+                    <span class="alert-summary-value medium">{{ results.alerts|selectattr('Severity', 'equalto', 'MEDIUM')|list|length }}</span>
+                </div>
+            </div>
+
             <div class="alerts-grid">
                 {% for alert in results.alerts %}
                 <div class="alert-card {{ alert.Severity|lower }}">
                     <div class="alert-header">
                         <span class="severity-badge {{ alert.Severity|lower }}">{{ alert.Severity }}</span>
                         <span class="alert-type">{{ alert.Type }}</span>
+                        <span class="pulse-dot {{ alert.Severity|lower }}"></span>
                     </div>
                     <div class="alert-body">
-                        <div class="alert-row">
-                            <span class="label">IP Address</span>
-                            <span class="value mono">{{ alert["IP Address"] }}</span>
+                        <div class="alert-ip-row">
+                            <span class="alert-ip mono" onclick="copyIP(this)">{{ alert["IP Address"] }}</span>
+                            <span class="addr-class">{{ alert["Address Class"] }}</span>
                         </div>
-                        <div class="alert-row">
-                            <span class="label">Packets</span>
-                            <span class="value">{{ alert.Packets }}</span>
+                        <div class="alert-metrics">
+                            <div class="alert-metric">
+                                <span class="alert-metric-label">Packets</span>
+                                <span class="alert-metric-value">{{ "{:,}".format(alert.Packets) }}</span>
+                            </div>
+                            <div class="alert-metric">
+                                <span class="alert-metric-label">Threshold</span>
+                                <span class="alert-metric-value">{{ alert.Threshold }}</span>
+                            </div>
                         </div>
-                        <div class="alert-row">
-                            <span class="label">Address Class</span>
-                            <span class="value">{{ alert["Address Class"] }}</span>
-                        </div>
-                        <div class="alert-row">
-                            <span class="label">Detail</span>
-                            <span class="value small">{{ alert.Detail }}</span>
+                        <div class="alert-detail">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            {{ alert.Detail }}
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
-        </div>
-        {% else %}
-        <div class="no-alerts">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6bcb77" stroke-width="1.5">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            <h3>No Threats Detected</h3>
-            <p>The network traffic appears clean. No anomalies found.</p>
-        </div>
-        {% endif %}
+            {% else %}
+            <div class="no-alerts">
+                <div class="no-alerts-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6bcb77" stroke-width="1.5">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <h3>All Clear</h3>
+                <p>No anomalies detected in this capture. Traffic appears clean and normal.</p>
+            </div>
+            {% endif %}
+        </section>
 
         <!-- Footer -->
-        <div class="dashboard-footer">
-            <p>Network Traffic Analyzer & Threat Detection System | Kirankumar Thakor | Cyber Security Project</p>
-        </div>
+        <footer class="dashboard-footer">
+            <p>Network Traffic Analyzer &amp; Threat Detection System | Operational Insights Report</p>
+            <p class="footer-sub">Generated locally &middot; all findings are candidates for analyst review</p>
+        </footer>
     </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Table search/filter
+        document.querySelectorAll('.table-search').forEach(search => {
+            search.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const table = document.getElementById(search.dataset.target);
+                if (!table) return;
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+                });
+            });
+        });
+
+        // Copy IP address on click
+        function copyIP(el) {
+            const text = el.textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('toast');
+                toast.textContent = `Copied ${text}`;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 1600);
+            });
+        }
+    </script>
 </body>
 </html>
