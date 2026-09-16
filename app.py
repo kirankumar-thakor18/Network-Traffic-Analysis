@@ -2,13 +2,23 @@ import io
 import os
 import uuid
 import base64
+import logging
+import traceback
 from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    send_file,
+)
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
 from scripts.analyzer import (
@@ -23,6 +33,10 @@ from scripts.analyzer import (
     save_charts,
 )
 from scripts.make_pdf import save_pdf_report
+
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(message)s")
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
@@ -164,7 +178,12 @@ def run_analysis(capture_path, top_n=10, scan_ports=25, std_mult=3.0, min_packet
         packets, src_counter, dst_counter, scan_ports, std_mult, min_packets
     )
 
-    charts = generate_chart_base64(protocol_counter, port_counter, top_n)
+    charts = {}
+    try:
+        charts = generate_chart_base64(protocol_counter, port_counter, top_n)
+    except Exception as e:
+        logger.warning("Chart generation failed for %s: %s", capture_path, e)
+        charts = {}
 
     total = sum(protocol_counter.values())
     protocol_stats = []
@@ -186,13 +205,16 @@ def run_analysis(capture_path, top_n=10, scan_ports=25, std_mult=3.0, min_packet
             "end": time_info["end"],
         }
 
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    save_report_csv(protocol_counter)
-    save_top_csv("top_source_ips.csv", src_counter.most_common(top_n), ["IP Address", "Packets"])
-    save_top_csv("top_destination_ips.csv", dst_counter.most_common(top_n), ["IP Address", "Packets"])
-    save_top_csv("top_destination_ports.csv", port_counter.most_common(top_n), ["Port", "Packets"])
-    save_alerts_csv(alerts)
-    save_charts(protocol_counter, port_counter, top_n)
+    try:
+        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        save_report_csv(protocol_counter)
+        save_top_csv("top_source_ips.csv", src_counter.most_common(top_n), ["IP Address", "Packets"])
+        save_top_csv("top_destination_ips.csv", dst_counter.most_common(top_n), ["IP Address", "Packets"])
+        save_top_csv("top_destination_ports.csv", port_counter.most_common(top_n), ["Port", "Packets"])
+        save_alerts_csv(alerts)
+        save_charts(protocol_counter, port_counter, top_n)
+    except Exception as e:
+        logger.warning("Report file saving failed for %s: %s", capture_path, e)
 
     return {
         "total_packets": len(packets),
@@ -206,6 +228,24 @@ def run_analysis(capture_path, top_n=10, scan_ports=25, std_mult=3.0, min_packet
         "charts": charts,
         "capture_name": Path(capture_path).name,
     }
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error("Internal Server Error:\n%s", traceback.format_exc())
+    return render_template(
+        "index.html",
+        error="Something went wrong while analyzing. This usually happens with very large captures "
+        "(memory limit) or unsupported packet formats. Try a smaller capture.",
+    ), 500
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def file_too_large(error):
+    return render_template(
+        "index.html",
+        error="File is too large! Maximum upload size is 100 MB. Try a smaller capture.",
+    ), 413
 
 
 @app.route("/")
@@ -239,6 +279,12 @@ def analyze():
         results = run_analysis(filepath, top_n, scan_ports, std_mult, min_packets)
         return render_template("dashboard.html", results=results)
     except Exception as e:
+        logger.error(
+            "Analysis failed for %s: %s\n%s",
+            file.filename,
+            e,
+            traceback.format_exc(),
+        )
         return render_template("index.html", error=f"Analysis failed: {str(e)}")
     finally:
         filepath.unlink(missing_ok=True)
