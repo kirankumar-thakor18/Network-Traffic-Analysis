@@ -185,7 +185,7 @@ python app.py
 run_web.bat
 ```
 
-Then open **http://127.0.0.1:5000** and either click **Run Demo** (uses the sample capture) or upload your own `.pcap` / `.pcapng` file. Results show live charts, protocol stats, top IPs/ports, and threat alerts in a dark-themed dashboard.
+Then open **http://127.0.0.1:5000** and upload your own `.pcap` / `.pcapng` file. Results show live charts, protocol stats, top IPs/ports, and threat alerts in a dark-themed dashboard, with a one-click **Download PDF** export of the full report.
 
 Server config is controlled via environment variables:
 
