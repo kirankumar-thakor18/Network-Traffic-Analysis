@@ -534,10 +534,26 @@ body {
 
 .chart.body, .chart-body { padding: 4px 0 0; }
 
+.chart-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    background: #101a30;
+    border-radius: 10px;
+    margin-top: 2px;
+}
+
+.chart-card.wide .chart-body {
+    min-height: 320px;
+    align-items: flex-start;
+}
+
 .chart-body img {
     width: 100%;
     height: auto;
-    border-radius: 8px;
+    border-radius: 10px;
+    display: block;
 }
 
 /* Charts Row */

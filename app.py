@@ -43,21 +43,60 @@ def allowed_file(filename):
 def generate_chart_base64(protocol_counter, port_counter, top_n=10):
     charts = {}
 
+    # Dashboard-style palette
+    NAVY_BG = "#0d1426"
+    PANEL_BG = "#101a30"
+    CYAN = "#00d2ff"
+    BLUE = "#0a85ff"
+    PURPLE = "#7b61ff"
+    RED = "#ff6b6b"
+    YELLOW = "#ffd93d"
+    GREEN = "#6bcb77"
+    LIGHT = "#dbe6f7"
+    MUTED = "#7a8bb0"
+    GRID = "#1c2b4a"
+
+    colors = [CYAN, BLUE, PURPLE, RED, YELLOW, GREEN,
+              "#ff9f43", "#e056fd", "#00cec9", "#fdcb6e"]
+
     # Protocol Pie Chart
-    fig, ax = plt.subplots(figsize=(6, 6))
-    colors = ["#00d2ff", "#0a85ff", "#7b61ff", "#ff6b6b", "#ffd93d", "#6bcb77"]
-    ax.pie(
+    fig, ax = plt.subplots(figsize=(6, 5.6))
+    fig.patch.set_facecolor(PANEL_BG)
+    ax.set_facecolor(PANEL_BG)
+
+    pie_colors = colors[: len(protocol_counter)]
+    wedges, texts, autotexts = ax.pie(
         protocol_counter.values(),
         labels=protocol_counter.keys(),
         autopct="%1.1f%%",
         startangle=90,
-        colors=colors[: len(protocol_counter)],
-        textprops={"fontsize": 12},
+        colors=pie_colors,
+        pctdistance=0.78,
+        labeldistance=1.08,
+        wedgeprops={"edgecolor": PANEL_BG, "linewidth": 2, "width": 0.42},
+        textprops={"fontsize": 11, "color": LIGHT, "fontweight": "bold"},
     )
-    ax.set_title("Protocol Distribution", fontsize=14, fontweight="bold")
+    for autotext in autotexts:
+        autotext.set_color("#ffffff")
+        autotext.set_fontsize(10.5)
+        autotext.set_fontweight(700)
+        autotext.set_fontfamily("DejaVu Sans")
+
+    ax.set_title(
+        "Protocol Distribution",
+        fontsize=14,
+        fontweight=700,
+        color="#ffffff",
+        pad=18,
+        fontfamily="DejaVu Sans",
+    )
+    ax.text(
+        0, 0, f"{sum(protocol_counter.values()):,}\npackets",
+        ha="center", va="center", fontsize=12, fontweight=700, color=LIGHT,
+    )
     plt.tight_layout()
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", facecolor="#1a1a2e")
+    fig.savefig(buf, format="png", dpi=160, bbox_inches="tight", facecolor=PANEL_BG)
     plt.close(fig)
     buf.seek(0)
     charts["protocol"] = base64.b64encode(buf.read()).decode("utf-8")
@@ -65,39 +104,54 @@ def generate_chart_base64(protocol_counter, port_counter, top_n=10):
     # Ports Bar Chart
     top_ports = port_counter.most_common(top_n)
     if top_ports:
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = plt.subplots(figsize=(10, 5.2))
+        fig.patch.set_facecolor(PANEL_BG)
+        ax.set_facecolor(PANEL_BG)
+
         ports = [str(p) for p, _ in top_ports]
         counts = [c for _, c in top_ports]
-        bars = ax.bar(ports, counts, color="#0a85ff", edgecolor="#00d2ff", linewidth=0.5)
-        ax.set_title(f"Top {top_n} Destination Ports", fontsize=14, fontweight="bold")
-        ax.set_xlabel("Port", fontsize=12)
-        ax.set_ylabel("Packets", fontsize=12)
-        ax.tick_params(axis="x", rotation=45, colors="white")
-        ax.tick_params(axis="y", colors="white")
-        ax.set_facecolor("#16213e")
-        fig.patch.set_facecolor("#1a1a2e")
-        ax.spines["bottom"].set_color("#444")
-        ax.spines["left"].set_color("#444")
+        bar_colors = [BLUE] * len(ports)
+        for i in range(len(ports)):
+            bar_colors[i] = colors[i % len(colors)]
+
+        bars = ax.bar(ports, counts, color=bar_colors, width=0.62,
+                      edgecolor=PANEL_BG, linewidth=1.2, zorder=3)
+
+        ax.set_title(f"Top {top_n} Destination Ports", fontsize=14, fontweight=700, color="#ffffff", pad=14)
+        ax.set_xlabel("Port", fontsize=11, color=MUTED, labelpad=8)
+        ax.set_ylabel("Packets", fontsize=11, color=MUTED, labelpad=8)
+
+        ax.tick_params(axis="x", rotation=30, colors=LIGHT, labelsize=10)
+        ax.tick_params(axis="y", colors=LIGHT, labelsize=10)
+        ax.grid(axis="y", color=GRID, linewidth=0.8, alpha=0.7, zorder=0)
+        ax.set_axisbelow(True)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-        for bar in bars:
+        ax.spines["bottom"].set_color(GRID)
+        ax.spines["left"].set_color(GRID)
+
+        max_count = max(counts) if counts else 1
+        for bar, count in zip(bars, counts):
             ax.text(
                 bar.get_x() + bar.get_width() / 2.0,
-                bar.get_height() + 20,
-                f"{int(bar.get_height()):,}",
+                count if count > 0 else 0,
+                f"{int(count):,}",
                 ha="center",
                 va="bottom",
-                fontsize=8,
-                color="white",
+                fontsize=9,
+                color=LIGHT,
+                fontweight="bold",
+                zorder=4,
             )
+        ax.set_ylim(0, max_count * 1.18)
+
         plt.tight_layout()
         buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", facecolor="#1a1a2e")
+        fig.savefig(buf, format="png", dpi=160, bbox_inches="tight", facecolor=PANEL_BG)
         plt.close(fig)
         buf.seek(0)
         charts["ports"] = base64.b64encode(buf.read()).decode("utf-8")
 
-    # Top Source IPs Bar Chart
     return charts
 
 
