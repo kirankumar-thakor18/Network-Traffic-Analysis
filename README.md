@@ -332,9 +332,6 @@ From the included `captures/traffic.pcapng` (a ~2-minute home capture):
 
 ## 👨‍💻 Developed By
 
-**Kirankumar Thakor** — 7th Semester, Information Technology  
-**Domain:** Cyber Security
+**Kirankumar Thakor**
 
 ---
-
-> 🎓 Prepared for the **Industrial Internship – Project Exhibition & Jury**, Engineers' Day, 17 September 2026.
