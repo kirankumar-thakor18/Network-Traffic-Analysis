@@ -12,6 +12,9 @@ import pandas as pd
 
 from scapy.all import rdpcap
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from make_pdf import save_pdf_report
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_CAPTURE = BASE_DIR / "captures" / "traffic.pcapng"
 REPORTS_DIR = BASE_DIR / "reports"
@@ -310,6 +313,7 @@ def main():
     save_top_csv("top_destination_ports.csv", port_counter.most_common(), ["Port", "Packets"])
     save_alerts_csv(alerts)
     save_charts(protocol_counter, port_counter, args.top)
+    save_pdf_report()
 
     print_section("Output Files")
     print(f"reports/traffic_report.csv")

@@ -332,6 +332,7 @@ threshold = mean(packet_counts) + (3 × std_dev(packet_counts))
 | `suspicious_ips.csv`        | All detected anomalies with severity         |
 | `protocol_chart.png`        | Protocol distribution pie chart              |
 | `top_ports_chart.png`       | Top ports bar chart                          |
+| `network_traffic_report.pdf` | **Print-ready PDF** of the whole report (all charts + tables + alerts) |
 
 **Sample `suspicious_ips.csv`:**
 
