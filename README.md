@@ -359,7 +359,7 @@ From the included `captures/traffic.pcapng` (a ~2-minute home capture):
 
 - Real-time packet capture & continuous monitoring
 - Email / Slack alerting on anomaly detection
-- User authentication & multi-user access for the dashboard
+- PDF export of the full report for easy sharing
 - Machine-learning based anomaly scoring
 - Integration with threat-intelligence IP feeds (e.g., AlienVault OTX)
 
