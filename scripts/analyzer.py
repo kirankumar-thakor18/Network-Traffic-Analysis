@@ -24,11 +24,11 @@ SEPARATOR = "=" * 45
 def load_packets(capture_path):
     capture_path = Path(capture_path)
     if not capture_path.is_file():
-        sys.exit(f"ERROR: Capture file not found: {capture_path}")
+        raise FileNotFoundError(f"Capture file not found: {capture_path}")
     try:
         return rdpcap(str(capture_path))
     except Exception as exc:
-        sys.exit(f"ERROR: Failed to read capture file: {exc}")
+        raise ValueError(f"Failed to read capture file: {exc}")
 
 
 def get_ip_layer(packet):
