@@ -1,3 +1,10 @@
 __pycache__/
 *.pyc
 uploads/
+reports/
+screenshots/
+*.pptx
+*.pdf
+*.png
+captures/*.pcapng
+!captures/traffic.pcapng

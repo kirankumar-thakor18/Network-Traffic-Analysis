@@ -8,7 +8,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, send_file
 from werkzeug.utils import secure_filename
 
 from scripts.analyzer import (
@@ -17,10 +17,15 @@ from scripts.analyzer import (
     analyze_ips_ports,
     analyze_time,
     detect_anomalies,
+    save_report_csv,
+    save_top_csv,
+    save_alerts_csv,
+    save_charts,
 )
+from scripts.make_pdf import save_pdf_report
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
 app.config["UPLOAD_FOLDER"] = Path(__file__).parent / "uploads"
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB max
 
@@ -28,6 +33,7 @@ ALLOWED_EXTENSIONS = {"pcap", "pcapng"}
 
 UPLOADS_DIR = Path(__file__).parent / "uploads"
 UPLOADS_DIR.mkdir(exist_ok=True)
+REPORTS_DIR = Path(__file__).parent / "reports"
 
 
 def allowed_file(filename):
@@ -126,6 +132,14 @@ def run_analysis(capture_path, top_n=10, scan_ports=25, std_mult=3.0, min_packet
             "end": time_info["end"],
         }
 
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    save_report_csv(protocol_counter)
+    save_top_csv("top_source_ips.csv", src_counter.most_common(top_n), ["IP Address", "Packets"])
+    save_top_csv("top_destination_ips.csv", dst_counter.most_common(top_n), ["IP Address", "Packets"])
+    save_top_csv("top_destination_ports.csv", port_counter.most_common(top_n), ["Port", "Packets"])
+    save_alerts_csv(alerts)
+    save_charts(protocol_counter, port_counter, top_n)
+
     return {
         "total_packets": len(packets),
         "protocols": protocol_stats,
@@ -176,18 +190,22 @@ def analyze():
         filepath.unlink(missing_ok=True)
 
 
-@app.route("/demo")
-def demo():
-    default_capture = Path(__file__).parent / "captures" / "traffic.pcapng"
-    if not default_capture.exists():
-        return render_template("index.html", error="Demo capture file not found!")
-
+@app.route("/download-pdf")
+def download_pdf():
     try:
-        results = run_analysis(default_capture)
-        return render_template("dashboard.html", results=results)
+        pdf_path = save_pdf_report()
+        return send_file(
+            pdf_path,
+            as_attachment=True,
+            download_name="network_traffic_report.pdf",
+            mimetype="application/pdf",
+        )
     except Exception as e:
-        return render_template("index.html", error=f"Demo failed: {str(e)}")
+        return render_template("index.html", error=f"PDF export failed: {str(e)}")
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    debug = os.getenv("FLASK_DEBUG", "0") == "1"
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", 5000))
+    app.run(debug=debug, host=host, port=port)

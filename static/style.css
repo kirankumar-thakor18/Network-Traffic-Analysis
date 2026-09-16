@@ -221,6 +221,13 @@ body {
 
 .btn-secondary:hover { background: #252550; color: white; }
 
+.btn-pdf {
+    background: linear-gradient(135deg, #00adb5, #007a80);
+    color: white;
+}
+
+.btn-pdf:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0, 173, 181, 0.3); }
+
 .btn-small {
     padding: 8px 16px;
     font-size: 0.85rem;
